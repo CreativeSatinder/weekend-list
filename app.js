@@ -53,7 +53,7 @@ function fixUiRefs() {
   const ui = state.ui;
   const hasStore = (id) => state.stores.some((s) => s.id === id);
   const hasPerson = (id) => state.people.some((p) => p.id === id);
-  if (ui.filter !== 'all' && !hasStore(ui.filter)) ui.filter = 'all';
+  if (ui.filter !== 'all' && ui.filter !== 'urgent' && !hasStore(ui.filter)) ui.filter = 'all';
   if (!hasStore(ui.addStore)) ui.addStore = storeById('').id;
   if (ui.personFilter !== 'all' && !hasPerson(ui.personFilter)) ui.personFilter = 'all';
   if (!hasPerson(ui.addPerson)) ui.addPerson = hasPerson(ui.me) ? ui.me : (state.people[0] || UNKNOWN).id;
