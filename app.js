@@ -42,7 +42,7 @@ const defaultState = () => ({
   people: DEFAULT_PEOPLE.map((p) => ({ ...p })), // { id, name, color, order }
   history: {}, // lowercased name -> { name, store, count }  (per phone, not shared)
   ui: {
-    tab: 'shop', filter: 'all', addStore: 'any', addDue: '', personFilter: 'all', addPerson: 'satinder',
+    tab: 'shop', filter: 'all', addStore: 'any', addUrgent: false, addDue: '', personFilter: 'all', addPerson: 'satinder',
     me: '',       // who uses this phone (a person id)
     family: null, // family sharing code, when joined
   },
@@ -195,7 +195,7 @@ function addItem(text) {
     existing.qty += qty;
     toast(`${existing.name} × ${existing.qty}`);
   } else {
-    state.items.push({ id: uid(), name, qty, store, note: '', done: false, addedBy: state.ui.me, createdAt: Date.now() });
+    state.items.push({ id: uid(), name, qty, store, urgent: !!state.ui.addUrgent, note: '', done: false, addedBy: state.ui.me, createdAt: Date.now() });
   }
   const hist = state.history[key] || { name, store, count: 0 };
   hist.count += 1; hist.store = store; hist.name = name;
@@ -267,12 +267,13 @@ function renderChips(kind, options, open, keyOf, filterKey, addKey) {
 function itemRow(item, showStore) {
   const s = storeById(item.store);
   const meta = [item.note, addedByLabel(item)].filter(Boolean).join(' · ');
-  return h('li', { class: `row${item.done ? ' done' : ''}`, style: `--c:${col(s)}` },
+  return h('li', { class: `row${item.done ? ' done' : ''}${item.urgent && !item.done ? ' urgent' : ''}`, style: `--c:${col(s)}` },
     h('button', { class: 'check', type: 'button', 'aria-label': item.done ? 'Untick' : 'Tick', onclick: () => toggleItem(item.id) }, svg(ICON_CHECK)),
     h('button', { class: 'row-main', type: 'button', onclick: () => toggleItem(item.id) },
       h('span', { class: 'row-title' }, item.name),
       meta ? h('span', { class: 'row-meta' }, meta) : null,
     ),
+    item.urgent && !item.done ? h('span', { class: 'urgency-dot' }) : null,
     showStore ? h('span', { class: 'store-tag', style: `--c:${col(s)}` }, s.name) : null,
     item.qty > 1 ? h('span', { class: 'qty' }, `×${item.qty}`) : null,
     h('button', { class: 'icon-btn edit', type: 'button', 'aria-label': `Edit ${item.name}`, onclick: () => editItem(item.id) }, svg(ICON_EDIT)),
@@ -394,11 +395,17 @@ function renderComposer() {
   if (state.ui.tab === 'shop') {
     input.placeholder = `Add to ${storeById(state.ui.addStore).name}… (e.g. 2 milk)`;
     input.setAttribute('list', 'history');
-    opts.replaceChildren(h('div', { class: 'opt-row' }, state.stores.map((s) => h('button', {
-      class: 'opt', type: 'button', style: `--c:${col(s)}`,
-      'aria-pressed': String(state.ui.addStore === s.id),
-      onclick: () => { state.ui.addStore = s.id; commit(); input.focus(); },
-    }, s.name))));
+    opts.replaceChildren(
+      h('div', { class: 'opt-row' }, state.stores.map((s) => h('button', {
+        class: 'opt', type: 'button', style: `--c:${col(s)}`,
+        'aria-pressed': String(state.ui.addStore === s.id),
+        onclick: () => { state.ui.addStore = s.id; commit(); input.focus(); },
+      }, s.name))),
+      h('div', { class: 'opt-row' },
+        h('button', { class: 'opt', type: 'button', style: '--c:var(--pal-green)', 'aria-pressed': String(!state.ui.addUrgent), onclick: () => { state.ui.addUrgent = false; commit(); input.focus(); } }, 'Normal'),
+        h('button', { class: 'opt', type: 'button', style: '--c:var(--pal-red)', 'aria-pressed': String(!!state.ui.addUrgent), onclick: () => { state.ui.addUrgent = true; commit(); input.focus(); } }, 'Urgent'),
+      ),
+    );
   } else {
     input.placeholder = `Add a to-do for ${personById(state.ui.addPerson).name}…`;
     input.removeAttribute('list');
@@ -482,6 +489,7 @@ function editItem(id) {
   if (!it) return;
   let qty = it.qty;
   let store = it.store;
+  let urgent = !!it.urgent;
 
   const nameIn = h('input', { type: 'text', value: it.name, required: true });
   const noteIn = h('input', { type: 'text', value: it.note || '', placeholder: 'Brand, size, on special…' });
@@ -502,6 +510,11 @@ function editItem(id) {
         qtyOut,
         h('button', { type: 'button', 'aria-label': 'More', onclick: () => { qty += 1; qtyOut.textContent = qty; } }, '+'))),
     h('div', { class: 'field' }, h('span', {}, 'Store'), storeSeg),
+    h('div', { class: 'field' }, h('span', {}, 'Priority'),
+      h('div', { class: 'seg' },
+        h('button', { class: 'opt', type: 'button', style: '--c:var(--pal-green)', id: 'urgNormal', 'aria-pressed': String(!urgent), onclick: () => { urgent = false; $('#urgNormal').setAttribute('aria-pressed','true'); $('#urgUrgent').setAttribute('aria-pressed','false'); } }, 'Normal'),
+        h('button', { class: 'opt', type: 'button', style: '--c:var(--pal-red)', id: 'urgUrgent', 'aria-pressed': String(urgent), onclick: () => { urgent = true; $('#urgNormal').setAttribute('aria-pressed','false'); $('#urgUrgent').setAttribute('aria-pressed','true'); } }, 'Urgent'),
+      )),
     h('label', { class: 'field' }, h('span', {}, 'Note'), noteIn),
     h('div', { class: 'sheet-actions' },
       h('button', { class: 'btn danger', value: 'delete', formnovalidate: true, onclick: () => deleteItem(id) }, 'Delete'),
@@ -515,6 +528,7 @@ function editItem(id) {
     cur.note = noteIn.value.trim();
     cur.qty = qty;
     cur.store = store;
+    cur.urgent = urgent;
     commit();
   });
 }
