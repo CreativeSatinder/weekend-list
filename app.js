@@ -1083,8 +1083,58 @@ $('#addInput').addEventListener('input', (e) => {
   }
 });
 
+/* ---------- Notifications ---------- */
+
+const NOTIF_LAST_KEY = 'weekend-notif-at';
+const NOTIF_INTERVAL = 60 * 60 * 1000; // remind at most once per hour
+
+function checkAndNotify() {
+  if (!('Notification' in window)) return;
+
+  const urgItems = state.items.filter((i) => !i.done && i.urgent);
+  const t = today();
+  const overdueTasks = state.tasks.filter((tk) => !tk.done && tk.due && tk.due <= t);
+  if (!urgItems.length && !overdueTasks.length) return;
+
+  const last = +localStorage.getItem(NOTIF_LAST_KEY) || 0;
+  if (Date.now() - last < NOTIF_INTERVAL) return;
+
+  const bodyParts = [];
+  if (urgItems.length) bodyParts.push(`${urgItems.length} urgent item${urgItems.length > 1 ? 's' : ''} in shop list`);
+  if (overdueTasks.length) bodyParts.push(`${overdueTasks.length} task${overdueTasks.length > 1 ? 's' : ''} due today or overdue`);
+
+  if (Notification.permission === 'granted') {
+    localStorage.setItem(NOTIF_LAST_KEY, Date.now());
+    new Notification('Weekend List', {
+      body: bodyParts.join('\n'),
+      icon: 'icons/icon-192.png',
+      tag: 'weekend-alert',
+      renotify: true,
+    });
+  } else if (Notification.permission === 'default' && !sessionStorage.getItem('notif-asked')) {
+    sessionStorage.setItem('notif-asked', '1');
+    const label = bodyParts.map((p) => p.replace(/ in shop list| today or overdue/, '')).join(' & ');
+    const el = $('#toast');
+    clearTimeout(toastTimer);
+    el.replaceChildren(
+      h('span', {}, label),
+      h('button', { type: 'button', onclick: () => {
+        Notification.requestPermission().then((p) => {
+          if (p === 'granted') {
+            localStorage.setItem(NOTIF_LAST_KEY, Date.now());
+            new Notification('Weekend List', { body: bodyParts.join('\n'), icon: 'icons/icon-192.png', tag: 'weekend-alert' });
+          }
+          hideToast();
+        });
+      }}, 'Allow notifications'),
+    );
+    el.classList.add('show');
+    toastTimer = setTimeout(hideToast, 8000);
+  }
+}
+
 // Re-render when returning to the app (dates like "Today" may have changed).
-document.addEventListener('visibilitychange', () => { if (!document.hidden) render(); });
+document.addEventListener('visibilitychange', () => { if (!document.hidden) { render(); checkAndNotify(); } });
 
 /* ---------- Theme toggle ---------- */
 
@@ -1116,6 +1166,7 @@ applyTheme(resolveTheme());
 
 render();
 sync.start();
+checkAndNotify();
 
 if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
   navigator.serviceWorker.register('sw.js').catch(() => {});

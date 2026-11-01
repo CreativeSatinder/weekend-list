@@ -1,6 +1,6 @@
 // Offline support: cache the app shell, serve it cache-first, refresh in the background.
 // Bump VERSION whenever you change any file so phones pick up the update.
-const VERSION = 'weekend-v7';
+const VERSION = 'weekend-v8';
 const SHELL = [
   './',
   'index.html',
