@@ -402,8 +402,7 @@ function renderComposer() {
         onclick: () => { state.ui.addStore = s.id; commit(); input.focus(); },
       }, s.name))),
       h('div', { class: 'opt-row' },
-        h('button', { class: 'opt', type: 'button', style: '--c:var(--pal-green)', 'aria-pressed': String(!state.ui.addUrgent), onclick: () => { state.ui.addUrgent = false; commit(); input.focus(); } }, 'Normal'),
-        h('button', { class: 'opt', type: 'button', style: '--c:var(--pal-red)', 'aria-pressed': String(!!state.ui.addUrgent), onclick: () => { state.ui.addUrgent = true; commit(); input.focus(); } }, 'Urgent'),
+        h('button', { class: 'opt', type: 'button', style: '--c:var(--pal-red)', 'aria-pressed': String(!!state.ui.addUrgent), onclick: () => { state.ui.addUrgent = !state.ui.addUrgent; commit(); input.focus(); } }, 'Urgent'),
       ),
     );
   } else {
@@ -512,8 +511,7 @@ function editItem(id) {
     h('div', { class: 'field' }, h('span', {}, 'Store'), storeSeg),
     h('div', { class: 'field' }, h('span', {}, 'Priority'),
       h('div', { class: 'seg' },
-        h('button', { class: 'opt', type: 'button', style: '--c:var(--pal-green)', id: 'urgNormal', 'aria-pressed': String(!urgent), onclick: () => { urgent = false; $('#urgNormal').setAttribute('aria-pressed','true'); $('#urgUrgent').setAttribute('aria-pressed','false'); } }, 'Normal'),
-        h('button', { class: 'opt', type: 'button', style: '--c:var(--pal-red)', id: 'urgUrgent', 'aria-pressed': String(urgent), onclick: () => { urgent = true; $('#urgNormal').setAttribute('aria-pressed','false'); $('#urgUrgent').setAttribute('aria-pressed','true'); } }, 'Urgent'),
+        h('button', { class: 'opt', type: 'button', style: '--c:var(--pal-red)', 'aria-pressed': String(urgent), onclick: function() { urgent = !urgent; this.setAttribute('aria-pressed', String(urgent)); } }, 'Urgent'),
       )),
     h('label', { class: 'field' }, h('span', {}, 'Note'), noteIn),
     h('div', { class: 'sheet-actions' },
