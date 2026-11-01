@@ -58,7 +58,10 @@ function AppContent() {
   const [priorityFilter, setPriorityFilter] = useState('all');
 
   useEffect(() => {
-    AsyncStorage.multiGet([STORAGE_KEY, STORES_KEY]).then(([[, todosData], [, storesData]]) => {
+    Promise.all([
+      AsyncStorage.getItem(STORAGE_KEY),
+      AsyncStorage.getItem(STORES_KEY),
+    ]).then(([todosData, storesData]) => {
       if (todosData) setTodos(JSON.parse(todosData));
       if (storesData) setStores(JSON.parse(storesData));
     });
