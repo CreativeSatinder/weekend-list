@@ -338,13 +338,18 @@ function renderShop() {
 function taskRow(task, showPerson) {
   const overdue = !task.done && task.due && task.due < today();
   const p = personById(task.person);
-  const meta = [task.due ? dueLabel(task.due) : '', task.notes ? task.notes.split('\n')[0] : '', addedByLabel(task)].filter(Boolean).join(' · ');
+  const metaParts = [task.due ? dueLabel(task.due) : '', task.notes ? task.notes.split('\n')[0] : '', addedByLabel(task)];
+  if (task.done && task.repeat === 'daily') metaParts.push('resets tomorrow');
+  else if (task.done && task.repeat === 'weekly') metaParts.push('resets next week');
+  const meta = metaParts.filter(Boolean).join(' · ');
+  const repeatLabel = !task.done && task.repeat === 'daily' ? '↻ Daily' : !task.done && task.repeat === 'weekly' ? '↻ Weekly' : null;
   return h('li', { class: `row${task.done ? ' done' : ''}`, style: `--c:${col(p)}` },
     h('button', { class: 'check', type: 'button', 'aria-label': task.done ? 'Mark not done' : 'Mark done', onclick: () => toggleTask(task.id) }, svg(ICON_CHECK)),
     h('button', { class: 'row-main', type: 'button', onclick: () => editTask(task.id) },
       h('span', { class: 'row-title' }, task.title),
       meta ? h('span', { class: `row-meta${overdue ? ' overdue' : ''}` }, meta) : null,
     ),
+    repeatLabel ? h('span', { class: 'repeat-tag' }, repeatLabel) : null,
     showPerson ? h('span', { class: 'person-tag' }, p.name) : null,
   );
 }
@@ -564,12 +569,22 @@ function editTask(id) {
     onclick: () => { person = p.id; drawPeople(); },
   }, p.name)));
   drawPeople();
+  let repeat = t.repeat || '';
+  const repeatSeg = h('div', { class: 'seg' });
+  const drawRepeat = () => repeatSeg.replaceChildren(
+    ...['', 'daily', 'weekly'].map((r) => h('button', {
+      class: 'opt', type: 'button', 'aria-pressed': String(repeat === r),
+      onclick: () => { repeat = r; drawRepeat(); },
+    }, r === '' ? 'None' : r === 'daily' ? '↻ Daily' : '↻ Weekly')),
+  );
+  drawRepeat();
 
   openSheet([
     h('h2', {}, 'Edit to-do'),
     h('label', { class: 'field' }, h('span', {}, 'Task'), titleIn),
     h('div', { class: 'field' }, h('span', {}, 'For'), personSeg),
     h('div', { class: 'field' }, h('span', {}, 'When'), quick, dueIn),
+    h('div', { class: 'field' }, h('span', {}, 'Repeat'), repeatSeg),
     h('label', { class: 'field' }, h('span', {}, 'Notes'), notesIn),
     h('div', { class: 'sheet-actions' },
       h('button', { class: 'btn danger', value: 'delete', formnovalidate: true, onclick: () => deleteTask(id) }, 'Delete'),
@@ -582,6 +597,7 @@ function editTask(id) {
     cur.notes = notesIn.value.trim();
     cur.due = dueIn.value || '';
     cur.person = person;
+    cur.repeat = repeat;
     commit();
   });
 }
@@ -1083,6 +1099,24 @@ $('#addInput').addEventListener('input', (e) => {
   }
 });
 
+/* ---------- Repeating tasks ---------- */
+
+function resetRepeatingTasks() {
+  const t = today();
+  let changed = false;
+  state.tasks.forEach((task) => {
+    if (!task.done || !task.repeat || !task.doneAt) return;
+    const doneDate = isoDate(new Date(task.doneAt));
+    if (task.repeat === 'daily' && doneDate < t) {
+      task.done = false; task.doneAt = null; changed = true;
+    } else if (task.repeat === 'weekly') {
+      const diffDays = Math.floor((Date.now() - task.doneAt) / 86400000);
+      if (diffDays >= 7) { task.done = false; task.doneAt = null; changed = true; }
+    }
+  });
+  if (changed) commit();
+}
+
 /* ---------- Notifications ---------- */
 
 const NOTIF_LAST_KEY = 'weekend-notif-at';
@@ -1134,7 +1168,7 @@ function checkAndNotify() {
 }
 
 // Re-render when returning to the app (dates like "Today" may have changed).
-document.addEventListener('visibilitychange', () => { if (!document.hidden) { render(); checkAndNotify(); } });
+document.addEventListener('visibilitychange', () => { if (!document.hidden) { resetRepeatingTasks(); render(); checkAndNotify(); } });
 
 /* ---------- Theme toggle ---------- */
 
@@ -1164,6 +1198,7 @@ function applyTheme(theme) {
 $('#themeBtn').addEventListener('click', () => applyTheme(resolveTheme() === 'dark' ? 'light' : 'dark'));
 applyTheme(resolveTheme());
 
+resetRepeatingTasks();
 render();
 sync.start();
 checkAndNotify();

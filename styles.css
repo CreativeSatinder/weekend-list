@@ -190,6 +190,7 @@ main { padding: 4px 16px calc(var(--tabbar-h) + var(--safe-b) + 180px); }
 .store-tag { flex: none; font-size: 12px; font-weight: 700; color: var(--c); }
 .urgency-dot { flex: none; width: 8px; height: 8px; border-radius: 50%; background: var(--pal-red); }
 .row.urgent .check { border-color: var(--pal-red); }
+.repeat-tag { flex: none; padding: 2px 8px; border-radius: 999px; font-size: 11px; font-weight: 700; background: color-mix(in srgb, var(--pal-blue) 14%, transparent); color: var(--pal-blue); }
 
 .empty { text-align: center; color: var(--muted); padding: 56px 24px; }
 .empty b { display: block; color: var(--text); font-size: 18px; margin-bottom: 6px; }
