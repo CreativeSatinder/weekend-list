@@ -12,16 +12,9 @@ const STORAGE_KEY = 'weekend-list-v1';
 // and shared with the family. These are just the starting defaults — rename them to your own stores.
 const DEFAULT_STORES = [
   { id: 'store1', name: 'Store 1', color: 'blue', order: 0 },
-  { id: 'store2', name: 'Store 2', color: 'red', order: 1 },
-  { id: 'store3', name: 'Store 3', color: 'green', order: 2 },
-  { id: 'any', name: 'Anywhere', color: 'grey', order: 3 },
 ];
 const DEFAULT_PEOPLE = [
-  { id: 'satinder', name: 'Satinder', color: 'forest', order: 0 },
-  { id: 'mum', name: 'Mum', color: 'pink', order: 1 },
-  { id: 'dolly', name: 'Dolly', color: 'amber', order: 2 },
-  { id: 'ishman', name: 'Ishman', color: 'indigo', order: 3 },
-  { id: 'trishveen', name: 'Trishveen', color: 'purple', order: 4 },
+  { id: 'person1', name: 'Person 1', color: 'forest', order: 0 },
 ];
 // Colour choices (each is a CSS variable --pal-<name> with light and dark versions).
 const PALETTE = ['red', 'orange', 'amber', 'green', 'forest', 'teal', 'blue', 'indigo', 'purple', 'pink', 'brown', 'grey'];
@@ -42,7 +35,7 @@ const defaultState = () => ({
   people: DEFAULT_PEOPLE.map((p) => ({ ...p })), // { id, name, color, order }
   history: {}, // lowercased name -> { name, store, count }  (per phone, not shared)
   ui: {
-    tab: 'shop', filter: 'all', addStore: 'any', addUrgent: false, addDue: '', personFilter: 'all', addPerson: 'satinder',
+    tab: 'shop', filter: 'all', addStore: 'store1', addUrgent: false, addDue: '', personFilter: 'all', addPerson: 'person1',
     me: '',       // who uses this phone (a person id)
     family: null, // family sharing code, when joined
   },
@@ -69,9 +62,9 @@ function load() {
     const base = defaultState();
     const s = { ...base, ...data, ui: { ...base.ui, ...(data.ui || {}) } };
     // "Me" became Satinder when lists became shareable.
-    s.tasks.forEach((t) => { if (!t.person || t.person === 'me') t.person = 'satinder'; });
-    if (s.ui.addPerson === 'me') s.ui.addPerson = 'satinder';
-    if (s.ui.personFilter === 'me') s.ui.personFilter = 'satinder';
+    s.tasks.forEach((t) => { if (!t.person || t.person === 'me') t.person = 'person1'; });
+    if (s.ui.addPerson === 'me') s.ui.addPerson = 'person1';
+    if (s.ui.personFilter === 'me') s.ui.personFilter = 'person1';
     if (!s.stores.length) s.stores = base.stores;
     if (!s.people.length) s.people = base.people;
     return s;
@@ -360,7 +353,7 @@ function renderTasks() {
   const view = $('#taskView');
   const t = today();
   const { personFilter } = state.ui;
-  const personOf = (x) => x.person || 'satinder';
+  const personOf = (x) => x.person || (state.people[0] || UNKNOWN).id;
   renderChips('people', state.people, state.tasks.filter((x) => !x.done), personOf, 'personFilter', 'addPerson');
 
   const visible = state.tasks.filter((x) => personFilter === 'all' || personOf(x) === personFilter);
@@ -564,7 +557,7 @@ function editTask(id) {
   const quick = h('div', { class: 'seg' }, DUE_OPTIONS().map((c) => h('button', {
     class: 'opt', type: 'button', onclick: () => { dueIn.value = c.value; },
   }, c.label)));
-  let person = t.person || 'satinder';
+  let person = t.person || (state.people[0] || UNKNOWN).id;
   const personSeg = h('div', { class: 'seg' });
   const drawPeople = () => personSeg.replaceChildren(...state.people.map((p) => h('button', {
     class: 'opt', type: 'button', style: `--c:${col(p)}`, 'aria-pressed': String(person === p.id),
