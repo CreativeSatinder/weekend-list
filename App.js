@@ -18,15 +18,33 @@ import FilterBar from './src/components/FilterBar';
 import MoveStoreModal from './src/components/MoveStoreModal';
 import { ThemeProvider, useTheme } from './src/context/ThemeContext';
 
+class ErrorBoundary extends React.Component {
+  constructor(props) { super(props); this.state = { error: null }; }
+  static getDerivedStateFromError(e) { return { error: e.toString() }; }
+  render() {
+    if (this.state.error) {
+      return (
+        <View style={{ flex: 1, padding: 24, paddingTop: 80, backgroundColor: '#fff' }}>
+          <Text style={{ color: 'red', fontSize: 13, fontWeight: '700', marginBottom: 8 }}>App crashed — please share this with support:</Text>
+          <Text style={{ color: '#333', fontSize: 11 }}>{this.state.error}</Text>
+        </View>
+      );
+    }
+    return this.props.children;
+  }
+}
+
 const STORAGE_KEY = '@todos_v1';
 const STORES_KEY = '@stores_v1';
 const DEFAULT_STORES = ['Aldi', 'Coles', 'Woolworths', 'IGA'];
 
 export default function App() {
   return (
-    <ThemeProvider>
-      <AppContent />
-    </ThemeProvider>
+    <ErrorBoundary>
+      <ThemeProvider>
+        <AppContent />
+      </ThemeProvider>
+    </ErrorBoundary>
   );
 }
 
