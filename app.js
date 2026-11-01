@@ -1066,6 +1066,34 @@ $('#addInput').addEventListener('input', (e) => {
 // Re-render when returning to the app (dates like "Today" may have changed).
 document.addEventListener('visibilitychange', () => { if (!document.hidden) render(); });
 
+/* ---------- Theme toggle ---------- */
+
+const THEME_KEY = 'weekend-theme';
+const ICON_SUN  = '<circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>';
+const ICON_MOON = '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>';
+
+function resolveTheme() {
+  const saved = localStorage.getItem(THEME_KEY);
+  if (saved === 'dark' || saved === 'light') return saved;
+  return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+}
+
+function applyTheme(theme) {
+  document.documentElement.setAttribute('data-theme', theme);
+  try { localStorage.setItem(THEME_KEY, theme); } catch {}
+  const btn = $('#themeBtn');
+  if (!btn) return;
+  const s = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  s.setAttribute('viewBox', '0 0 24 24');
+  s.setAttribute('aria-hidden', 'true');
+  s.innerHTML = theme === 'dark' ? ICON_SUN : ICON_MOON;
+  btn.replaceChildren(s);
+  btn.setAttribute('aria-label', theme === 'dark' ? 'Switch to light theme' : 'Switch to dark theme');
+}
+
+$('#themeBtn').addEventListener('click', () => applyTheme(resolveTheme() === 'dark' ? 'light' : 'dark'));
+applyTheme(resolveTheme());
+
 render();
 sync.start();
 
