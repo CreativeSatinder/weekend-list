@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Weekend List</title>
+  <meta name="description" content="Shopping list for Aldi, Coles and Woolworths, plus weekend to-dos.">
+
+  <!-- Installable on iPhone via Safari > Share > Add to Home Screen -->
+  <link rel="manifest" href="manifest.webmanifest">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Weekend">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="theme-color" content="#f6f5f1" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#141517" media="(prefers-color-scheme: dark)">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="top">
+    <div class="top-row">
+      <h1 id="title">Shopping</h1>
+      <button class="sync-pill" id="syncPill" type="button" hidden aria-label="Family sharing status"><i></i><span></span></button>
+      <button class="icon-btn" id="menuBtn" aria-label="Menu">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg>
+      </button>
+    </div>
+    <p class="subtitle" id="subtitle"></p>
+
+    <!-- Store filter (shopping tab only) -->
+    <div class="chips" id="storeChips" role="tablist" aria-label="Filter by store"></div>
+  </header>
+
+  <main id="main">
+    <section id="shopView" class="view" aria-label="Shopping list"></section>
+    <section id="taskView" class="view" aria-label="Tasks" hidden></section>
+  </main>
+
+  <!-- Composer: sits above the tab bar -->
+  <form class="composer" id="composer" autocomplete="off">
+    <div class="composer-opts" id="composerOpts"></div>
+    <div class="composer-row">
+      <input id="addInput" type="text" enterkeyhint="done" placeholder="Add an item… (e.g. 2 milk)" list="history" aria-label="New item">
+      <button type="submit" class="add-btn" aria-label="Add">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+      </button>
+    </div>
+    <datalist id="history"></datalist>
+  </form>
+
+  <nav class="tabbar" aria-label="Sections">
+    <button class="tab" data-tab="shop" aria-current="page">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 4h2l2.4 11.2a2 2 0 0 0 2 1.6h7.7a2 2 0 0 0 2-1.5L21 8H6.2"/><circle cx="10" cy="20.5" r="1.3"/><circle cx="17" cy="20.5" r="1.3"/></svg>
+      <span>Shopping</span><b class="badge" id="shopBadge"></b>
+    </button>
+    <button class="tab" data-tab="tasks">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6h11M9 12h11M9 18h11"/><path d="M3.5 6l1.2 1.2L7 5M3.5 12l1.2 1.2L7 11M3.5 18l1.2 1.2L7 17"/></svg>
+      <span>To-do</span><b class="badge" id="taskBadge"></b>
+    </button>
+  </nav>
+
+  <!-- Edit sheet (shared by items and tasks) -->
+  <dialog id="sheet" class="sheet">
+    <form method="dialog" id="sheetForm"></form>
+  </dialog>
+
+  <!-- Menu sheet -->
+  <dialog id="menu" class="sheet">
+    <form method="dialog" class="menu">
+      <div class="grabber"></div>
+      <button value="family" class="menu-item">Family sharing</button>
+      <button value="editStores" class="menu-item">Edit stores</button>
+      <button value="editPeople" class="menu-item">Edit family members</button>
+      <button value="share" class="menu-item">Share shopping list as text</button>
+      <button value="export" class="menu-item">Back up data (export)</button>
+      <button value="import" class="menu-item">Restore from backup (import)</button>
+      <button value="clearHistory" class="menu-item">Forget suggestion history</button>
+      <button value="cancel" class="menu-item muted">Close</button>
+    </form>
+  </dialog>
+  <input type="file" id="importFile" accept="application/json,.json" hidden>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script src="config.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
