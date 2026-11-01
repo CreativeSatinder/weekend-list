@@ -1,7 +1,7 @@
 'use strict';
 
 /* =========================================================
-   Weekend List — shopping (Aldi / Coles / Woolworths) + to-dos
+   Weekend List — shopping list + to-dos
    Data lives on the device in localStorage. With family sharing
    switched on (config.js), lists also sync through Firebase.
    ========================================================= */
@@ -9,11 +9,11 @@
 const STORAGE_KEY = 'weekend-list-v1';
 
 // Stores and family members are editable in the app (••• → Edit stores / Edit family)
-// and shared with the family. These are just the starting lists.
+// and shared with the family. These are just the starting defaults — rename them to your own stores.
 const DEFAULT_STORES = [
-  { id: 'aldi', name: 'Aldi', color: 'blue', order: 0 },
-  { id: 'coles', name: 'Coles', color: 'red', order: 1 },
-  { id: 'woolies', name: 'Woolies', color: 'green', order: 2 },
+  { id: 'store1', name: 'Store 1', color: 'blue', order: 0 },
+  { id: 'store2', name: 'Store 2', color: 'red', order: 1 },
+  { id: 'store3', name: 'Store 3', color: 'green', order: 2 },
   { id: 'any', name: 'Anywhere', color: 'grey', order: 3 },
 ];
 const DEFAULT_PEOPLE = [
@@ -260,7 +260,7 @@ function renderChips(kind, options, open, keyOf, filterKey, addKey) {
   $('#storeChips').replaceChildren(
     chip('all', 'All', null, open.length),
     ...options.map((o) => chip(o.id, o.name, col(o), counts[o.id])),
-    h('button', { class: 'chip chip-edit', type: 'button', onclick: () => openListEditor(kind) }, svg(ICON_PENCIL), 'Edit'),
+    h('button', { class: 'chip chip-edit', type: 'button', onclick: () => openListEditor(kind) }, svg(ICON_PENCIL), kind === 'stores' ? 'Manage stores' : 'Manage people'),
   );
 }
 
@@ -295,7 +295,9 @@ function renderShop() {
     const where = filter === 'all' ? '' : ` for ${storeById(filter).name}`;
     view.replaceChildren(h('div', { class: 'empty' },
       h('b', {}, `Nothing on the list${where}`),
-      'Pick a store below, then type an item. Try “2 milk” or “bananas x6”.'));
+      'Pick a store below, then type an item. Try “2 milk” or “bananas x6”.',
+      h('br'), h('br'),
+      h('button', { class: 'link-btn', type: 'button', style: 'font-size:14px', onclick: () => openListEditor('stores') }, '⚙ Rename your stores →')));
     return;
   }
 
