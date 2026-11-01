@@ -282,9 +282,19 @@ function itemRow(item, showStore) {
 
 function renderShop() {
   renderChips('stores', state.stores, state.items.filter((i) => !i.done), (i) => i.store, 'filter', 'addStore');
+  // Insert Urgent chip after “All”
+  const urgentCount = state.items.filter((i) => !i.done && i.urgent).length;
+  const urgentChip = h('button', {
+    class: 'chip', role: 'tab', type: 'button', style: '--c:var(--pal-red)',
+    'aria-selected': String(state.ui.filter === 'urgent'),
+    onclick: () => { state.ui.filter = state.ui.filter === 'urgent' ? 'all' : 'urgent'; commit(); },
+  }, h('span', { class: 'dot' }), 'Urgent', h('span', { class: 'n' }, urgentCount));
+  const storeChips = $('#storeChips');
+  storeChips.insertBefore(urgentChip, storeChips.children[1]);
+
   const view = $('#shopView');
   const { filter } = state.ui;
-  const visible = state.items.filter((i) => filter === 'all' || i.store === filter);
+  const visible = state.items.filter((i) => filter === 'urgent' ? i.urgent : (filter === 'all' || i.store === filter));
   const open = visible.filter((i) => !i.done);
   const done = visible.filter((i) => i.done).sort((a, b) => (b.doneAt || 0) - (a.doneAt || 0));
 
@@ -293,17 +303,22 @@ function renderShop() {
     : '';
 
   if (!visible.length) {
-    const where = filter === 'all' ? '' : ` for ${storeById(filter).name}`;
+    const where = filter === 'all' || filter === 'urgent' ? '' : ` for ${storeById(filter).name}`;
     view.replaceChildren(h('div', { class: 'empty' },
-      h('b', {}, `Nothing on the list${where}`),
-      'Pick a store below, then type an item. Try “2 milk” or “bananas x6”.',
+      h('b', {}, filter === 'urgent' ? 'No urgent items' : `Nothing on the list${where}`),
+      filter === 'urgent' ? 'Mark items as Urgent when adding or editing them.' : 'Pick a store below, then type an item. Try “2 milk” or “bananas x6”.',
       h('br'), h('br'),
       h('button', { class: 'link-btn', type: 'button', style: 'font-size:14px', onclick: () => openListEditor('stores') }, '⚙ Rename your stores →')));
     return;
   }
 
   const groups = [];
-  if (filter === 'all') {
+  if (filter === 'urgent') {
+    for (const s of state.stores) {
+      const its = open.filter((i) => i.store === s.id);
+      if (its.length) groups.push({ title: s.name, color: col(s), items: its });
+    }
+  } else if (filter === 'all') {
     for (const s of state.stores) {
       const its = open.filter((i) => i.store === s.id);
       if (its.length) groups.push({ title: s.name, color: col(s), items: its });
@@ -314,14 +329,14 @@ function renderShop() {
 
   const nodes = groups.map((g) => h('div', { class: 'group' },
     h('div', { class: 'group-head', style: `--c:${g.color}` }, h('span', { class: 'dot' }), g.title, h('span', { class: 'spacer' }), String(g.items.length)),
-    h('ul', { class: 'list' }, g.items.map((i) => itemRow(i, false))),
+    h('ul', { class: 'list' }, g.items.map((i) => itemRow(i, filter === 'urgent'))),
   ));
 
   if (done.length) {
     nodes.push(h('div', { class: 'group' },
       h('div', { class: 'group-head' }, 'In the trolley', h('span', { class: 'spacer' }),
         h('button', { class: 'link-btn', type: 'button', onclick: () => clearDoneItems(done.map((i) => i.id)) }, 'Clear')),
-      h('ul', { class: 'list' }, done.map((i) => itemRow(i, filter === 'all'))),
+      h('ul', { class: 'list' }, done.map((i) => itemRow(i, filter === 'all' || filter === 'urgent'))),
     ));
   }
   view.replaceChildren(...nodes);
