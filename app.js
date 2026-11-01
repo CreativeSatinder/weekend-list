@@ -227,7 +227,7 @@ function render() {
   });
   $('#shopView').hidden = tab !== 'shop';
   $('#taskView').hidden = tab !== 'tasks';
-  $('#title').textContent = tab === 'shop' ? 'Shopping' : 'To-do';
+  $('#title').textContent = tab === 'shop' ? 'Shop' : 'To-do';
 
   const toBuy = state.items.filter((i) => !i.done).length;
   const dueNow = state.tasks.filter((t) => !t.done && t.due && t.due <= today()).length;
