@@ -1,15 +1,19 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { useTheme } from '../context/ThemeContext';
 
 const PRIORITY_COLORS = { low: '#4CAF50', medium: '#FF9800', high: '#F44336' };
-const PRIORITY_BG = { low: '#E8F5E9', medium: '#FFF3E0', high: '#FFEBEE' };
+const PRIORITY_BG_LIGHT = { low: '#E8F5E9', medium: '#FFF3E0', high: '#FFEBEE' };
+const PRIORITY_BG_DARK  = { low: '#1B3320', medium: '#2E2010', high: '#2E1010' };
 
 export default function TodoItem({ todo, onToggle, onDelete, onMove }) {
+  const { theme } = useTheme();
   const isOverdue =
     todo.dueDate && !todo.completed && new Date(todo.dueDate) < new Date(new Date().toDateString());
+  const priorityBg = theme.dark ? PRIORITY_BG_DARK[todo.priority] : PRIORITY_BG_LIGHT[todo.priority];
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: theme.card }]}>
       <TouchableOpacity onPress={() => onToggle(todo.id)} style={styles.checkbox}>
         <View style={[styles.checkboxInner, todo.completed && styles.checkboxChecked]}>
           {todo.completed && <Text style={styles.checkmark}>✓</Text>}
@@ -17,20 +21,19 @@ export default function TodoItem({ todo, onToggle, onDelete, onMove }) {
       </TouchableOpacity>
 
       <View style={styles.content}>
-        <Text style={[styles.title, todo.completed && styles.titleDone]}>{todo.title}</Text>
+        <Text style={[styles.title, { color: theme.text }, todo.completed && styles.titleDone]}>
+          {todo.title}
+        </Text>
         <View style={styles.meta}>
-          <View style={[styles.priorityBadge, { backgroundColor: PRIORITY_BG[todo.priority] }]}>
+          <View style={[styles.priorityBadge, { backgroundColor: priorityBg }]}>
             <Text style={[styles.priorityText, { color: PRIORITY_COLORS[todo.priority] }]}>
               {todo.priority.toUpperCase()}
             </Text>
           </View>
           {todo.dueDate && (
-            <Text style={[styles.dueDate, isOverdue && styles.overdue]}>
+            <Text style={[styles.dueDate, { color: theme.subtext }, isOverdue && styles.overdue]}>
               {isOverdue ? '⚠ ' : '📅 '}
-              {new Date(todo.dueDate).toLocaleDateString('en-US', {
-                month: 'short',
-                day: 'numeric',
-              })}
+              {new Date(todo.dueDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
             </Text>
           )}
         </View>
@@ -41,7 +44,7 @@ export default function TodoItem({ todo, onToggle, onDelete, onMove }) {
           <Text style={styles.moveBtnText}>↔</Text>
         </TouchableOpacity>
         <TouchableOpacity onPress={() => onDelete(todo.id)} style={styles.deleteBtn}>
-          <Text style={styles.deleteText}>✕</Text>
+          <Text style={[styles.deleteText, { color: theme.muted }]}>✕</Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -52,7 +55,6 @@ const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#fff',
     borderRadius: 12,
     padding: 14,
     marginBottom: 10,
@@ -75,16 +77,16 @@ const styles = StyleSheet.create({
   checkboxChecked: { backgroundColor: '#6C63FF', borderColor: '#6C63FF' },
   checkmark: { color: '#fff', fontSize: 13, fontWeight: 'bold' },
   content: { flex: 1 },
-  title: { fontSize: 16, color: '#1A1A2E', fontWeight: '500' },
+  title: { fontSize: 16, fontWeight: '500' },
   titleDone: { textDecorationLine: 'line-through', color: '#AAAAAA' },
   meta: { flexDirection: 'row', alignItems: 'center', marginTop: 6, gap: 8 },
   priorityBadge: { borderRadius: 6, paddingHorizontal: 7, paddingVertical: 2 },
   priorityText: { fontSize: 10, fontWeight: '700', letterSpacing: 0.5 },
-  dueDate: { fontSize: 12, color: '#888' },
+  dueDate: { fontSize: 12 },
   overdue: { color: '#F44336', fontWeight: '600' },
   actions: { flexDirection: 'row', alignItems: 'center', gap: 2 },
   moveBtn: { padding: 6 },
   moveBtnText: { color: '#6C63FF', fontSize: 18, fontWeight: 'bold' },
   deleteBtn: { padding: 6 },
-  deleteText: { color: '#CCCCCC', fontSize: 18, fontWeight: 'bold' },
+  deleteText: { fontSize: 18, fontWeight: 'bold' },
 });

@@ -16,12 +16,22 @@ import TodoItem from './src/components/TodoItem';
 import AddTodoModal from './src/components/AddTodoModal';
 import FilterBar from './src/components/FilterBar';
 import MoveStoreModal from './src/components/MoveStoreModal';
+import { ThemeProvider, useTheme } from './src/context/ThemeContext';
 
 const STORAGE_KEY = '@todos_v1';
 const STORES_KEY = '@stores_v1';
 const DEFAULT_STORES = ['Aldi', 'Coles', 'Woolworths', 'IGA'];
 
 export default function App() {
+  return (
+    <ThemeProvider>
+      <AppContent />
+    </ThemeProvider>
+  );
+}
+
+function AppContent() {
+  const { theme, toggleTheme } = useTheme();
   const [todos, setTodos] = useState([]);
   const [stores, setStores] = useState(DEFAULT_STORES);
   const [modalVisible, setModalVisible] = useState(false);
@@ -122,21 +132,26 @@ export default function App() {
   const movingTodo = movingTodoId ? todos.find((t) => t.id === movingTodoId) : null;
 
   return (
-    <SafeAreaView style={styles.safe}>
+    <SafeAreaView style={[styles.safe, { backgroundColor: theme.header }]}>
       <ExpoStatusBar style="light" />
-      <StatusBar backgroundColor="#6C63FF" barStyle="light-content" />
+      <StatusBar backgroundColor={theme.header} barStyle="light-content" />
 
-      <View style={styles.header}>
+      <View style={[styles.header, { backgroundColor: theme.header }]}>
         <View>
           <Text style={styles.headerTitle}>Shopping List</Text>
           <Text style={styles.headerSub}>{counts.done}/{counts.total} collected</Text>
         </View>
-        <TouchableOpacity style={styles.addBtn} onPress={() => setModalVisible(true)}>
-          <Text style={styles.addBtnText}>+</Text>
-        </TouchableOpacity>
+        <View style={styles.headerActions}>
+          <TouchableOpacity style={styles.themeBtn} onPress={toggleTheme}>
+            <Text style={styles.themeBtnText}>{theme.dark ? '☀️' : '🌙'}</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.addBtn} onPress={() => setModalVisible(true)}>
+            <Text style={styles.addBtnText}>+</Text>
+          </TouchableOpacity>
+        </View>
       </View>
 
-      <View style={styles.body}>
+      <View style={[styles.body, { backgroundColor: theme.bg }]}>
         <FilterBar
           statusFilter={statusFilter}
           priorityFilter={priorityFilter}
@@ -147,8 +162,8 @@ export default function App() {
         {grouped.length === 0 ? (
           <View style={styles.empty}>
             <Text style={styles.emptyIcon}>{todos.length === 0 ? '🛒' : '🔍'}</Text>
-            <Text style={styles.emptyTitle}>{todos.length === 0 ? 'List is empty' : 'No matches'}</Text>
-            <Text style={styles.emptySubtitle}>
+            <Text style={[styles.emptyTitle, { color: theme.text }]}>{todos.length === 0 ? 'List is empty' : 'No matches'}</Text>
+            <Text style={[styles.emptySubtitle, { color: theme.subtext }]}>
               {todos.length === 0 ? 'Tap + to add your first item' : 'Try adjusting the filters'}
             </Text>
           </View>
@@ -159,8 +174,8 @@ export default function App() {
             renderItem={({ item }) =>
               item.type === 'header' ? (
                 <View style={styles.storeHeader}>
-                  <Text style={styles.storeHeaderText}>🏪 {item.store}</Text>
-                  <Text style={styles.storeHeaderCount}>{item.count}</Text>
+                  <Text style={[styles.storeHeaderText, { color: theme.header }]}>🏪 {item.store}</Text>
+                  <Text style={[styles.storeHeaderCount, { backgroundColor: theme.header }]}>{item.count}</Text>
                 </View>
               ) : (
                 <TodoItem
@@ -199,7 +214,7 @@ export default function App() {
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: '#6C63FF' },
+  safe: { flex: 1 },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -207,10 +222,19 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     paddingTop: 16,
     paddingBottom: 24,
-    backgroundColor: '#6C63FF',
   },
   headerTitle: { fontSize: 28, fontWeight: '800', color: '#fff' },
   headerSub: { fontSize: 14, color: 'rgba(255,255,255,0.7)', marginTop: 2 },
+  headerActions: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  themeBtn: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  themeBtnText: { fontSize: 18 },
   addBtn: {
     width: 48,
     height: 48,
@@ -222,7 +246,6 @@ const styles = StyleSheet.create({
   addBtnText: { fontSize: 28, color: '#fff', fontWeight: '300', lineHeight: 32 },
   body: {
     flex: 1,
-    backgroundColor: '#F5F5FA',
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     paddingHorizontal: 20,

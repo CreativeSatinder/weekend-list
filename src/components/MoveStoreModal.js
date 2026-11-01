@@ -8,8 +8,10 @@ import {
   TextInput,
   ScrollView,
 } from 'react-native';
+import { useTheme } from '../context/ThemeContext';
 
 export default function MoveStoreModal({ visible, currentStore, stores, onConfirm, onCancel, onAddStore }) {
+  const { theme } = useTheme();
   const [newStore, setNewStore] = useState('');
   const [showInput, setShowInput] = useState(false);
 
@@ -24,20 +26,20 @@ export default function MoveStoreModal({ visible, currentStore, stores, onConfir
 
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onCancel}>
-      <View style={styles.overlay}>
-        <View style={styles.card}>
-          <Text style={styles.title}>Move to Store</Text>
-          <Text style={styles.subtitle}>Currently in <Text style={styles.bold}>{currentStore}</Text></Text>
+      <View style={[styles.overlay, { backgroundColor: theme.overlay }]}>
+        <View style={[styles.card, { backgroundColor: theme.card }]}>
+          <Text style={[styles.title, { color: theme.text }]}>Move to Store</Text>
+          <Text style={[styles.subtitle, { color: theme.subtext }]}>Currently in <Text style={styles.bold}>{currentStore}</Text></Text>
 
           <ScrollView style={styles.list} showsVerticalScrollIndicator={false}>
             {stores.map((store) => (
               <TouchableOpacity
                 key={store}
-                style={[styles.storeRow, store === currentStore && styles.storeRowActive]}
+                style={[styles.storeRow, { backgroundColor: theme.rowBg }, store === currentStore && { backgroundColor: theme.rowActiveBg }]}
                 onPress={() => onConfirm(store)}
               >
-                <Text style={[styles.storeIcon]}>🏪</Text>
-                <Text style={[styles.storeName, store === currentStore && styles.storeNameActive]}>
+                <Text style={styles.storeIcon}>🏪</Text>
+                <Text style={[styles.storeName, { color: theme.text }, store === currentStore && styles.storeNameActive]}>
                   {store}
                 </Text>
                 {store === currentStore && <Text style={styles.check}>✓</Text>}
@@ -47,9 +49,9 @@ export default function MoveStoreModal({ visible, currentStore, stores, onConfir
             {showInput ? (
               <View style={styles.newStoreRow}>
                 <TextInput
-                  style={styles.newStoreInput}
+                  style={[styles.newStoreInput, { borderColor: '#6C63FF', backgroundColor: theme.inputBg, color: theme.text }]}
                   placeholder="Store name"
-                  placeholderTextColor="#BBB"
+                  placeholderTextColor={theme.muted}
                   value={newStore}
                   onChangeText={setNewStore}
                   autoFocus
@@ -61,14 +63,14 @@ export default function MoveStoreModal({ visible, currentStore, stores, onConfir
                 </TouchableOpacity>
               </View>
             ) : (
-              <TouchableOpacity style={styles.addStoreBtn} onPress={() => setShowInput(true)}>
+              <TouchableOpacity style={[styles.addStoreBtn, { borderColor: theme.borderLight }]} onPress={() => setShowInput(true)}>
                 <Text style={styles.addStoreBtnText}>+ Add new store</Text>
               </TouchableOpacity>
             )}
           </ScrollView>
 
-          <TouchableOpacity style={styles.cancelBtn} onPress={onCancel}>
-            <Text style={styles.cancelText}>Cancel</Text>
+          <TouchableOpacity style={[styles.cancelBtn, { borderColor: theme.borderLight }]} onPress={onCancel}>
+            <Text style={[styles.cancelText, { color: theme.subtext }]}>Cancel</Text>
           </TouchableOpacity>
         </View>
       </View>

@@ -6,6 +6,7 @@ import {
   Modal,
   StyleSheet,
 } from 'react-native';
+import { useTheme } from '../context/ThemeContext';
 
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
@@ -13,14 +14,14 @@ function daysInMonth(month, year) {
   return new Date(year, month + 1, 0).getDate();
 }
 
-function Spinner({ value, label, onUp, onDown }) {
+function Spinner({ label, onUp, onDown, theme }) {
   return (
     <View style={styles.spinner}>
       <TouchableOpacity onPress={onUp} style={styles.arrow}>
         <Text style={styles.arrowText}>▲</Text>
       </TouchableOpacity>
-      <View style={styles.valueBox}>
-        <Text style={styles.valueText}>{label}</Text>
+      <View style={[styles.valueBox, { backgroundColor: theme.spinnerBox }]}>
+        <Text style={[styles.valueText, { color: theme.header }]}>{label}</Text>
       </View>
       <TouchableOpacity onPress={onDown} style={styles.arrow}>
         <Text style={styles.arrowText}>▼</Text>
@@ -30,6 +31,7 @@ function Spinner({ value, label, onUp, onDown }) {
 }
 
 export default function DatePickerModal({ visible, initialDate, onConfirm, onCancel }) {
+  const { theme } = useTheme();
   const base = initialDate ? new Date(initialDate) : new Date();
   const [month, setMonth] = useState(base.getMonth());
   const [day, setDay] = useState(base.getDate());
@@ -58,35 +60,23 @@ export default function DatePickerModal({ visible, initialDate, onConfirm, onCan
 
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onCancel}>
-      <View style={styles.overlay}>
-        <View style={styles.card}>
-          <Text style={styles.title}>Pick a Date</Text>
+      <View style={[styles.overlay, { backgroundColor: theme.overlay }]}>
+        <View style={[styles.card, { backgroundColor: theme.card }]}>
+          <Text style={[styles.title, { color: theme.text }]}>Pick a Date</Text>
 
           <View style={styles.row}>
-            <Spinner
-              label={MONTHS[month]}
-              onUp={() => changeMonth(1)}
-              onDown={() => changeMonth(-1)}
-            />
-            <Spinner
-              label={String(day).padStart(2, '0')}
-              onUp={() => changeDay(1)}
-              onDown={() => changeDay(-1)}
-            />
-            <Spinner
-              label={String(year)}
-              onUp={() => changeYear(1)}
-              onDown={() => changeYear(-1)}
-            />
+            <Spinner label={MONTHS[month]} onUp={() => changeMonth(1)} onDown={() => changeMonth(-1)} theme={theme} />
+            <Spinner label={String(day).padStart(2, '0')} onUp={() => changeDay(1)} onDown={() => changeDay(-1)} theme={theme} />
+            <Spinner label={String(year)} onUp={() => changeYear(1)} onDown={() => changeYear(-1)} theme={theme} />
           </View>
 
-          <Text style={styles.preview}>
+          <Text style={[styles.preview, { color: theme.subtext }]}>
             {MONTHS[month]} {day}, {year}
           </Text>
 
           <View style={styles.actions}>
-            <TouchableOpacity style={styles.cancelBtn} onPress={onCancel}>
-              <Text style={styles.cancelText}>Cancel</Text>
+            <TouchableOpacity style={[styles.cancelBtn, { borderColor: theme.borderLight }]} onPress={onCancel}>
+              <Text style={[styles.cancelText, { color: theme.subtext }]}>Cancel</Text>
             </TouchableOpacity>
             <TouchableOpacity style={styles.confirmBtn} onPress={handleConfirm}>
               <Text style={styles.confirmText}>Confirm</Text>
